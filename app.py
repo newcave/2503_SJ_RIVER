@@ -6,7 +6,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 # Page Title
-st.title("Random Forest Prediction GUI with CSV Data")
+st.title("SeomJin River ML based-WL Prediction Surrogate Model")
 
 # File Uploader
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -66,16 +66,19 @@ for target_col in target_columns:
     result_df['Predicted WL (EL.m)'] = predictions
 
     # 통계 및 메트릭 계산
+    rmse = np.sqrt(mean_squared_error(testY, predictions))
+    nrmse = rmse / (np.max(testY) - np.min(testY)) * 100
     stat_data = {
         "location": target_col,
-        "Min (Actual)": round(np.min(testY), 3),
-        "Max (Actual)": round(np.max(testY), 3),
-        "Mean (Actual)": round(np.mean(testY), 3),
-        "Variance (Actual)": round(np.var(testY), 3),
-        "RMSE": round(np.sqrt(mean_squared_error(testY, predictions)), 3),
+        "Min (Actual)": round(np.min(testY), 2),
+        "Max (Actual)": round(np.max(testY), 2),
+        "Mean (Actual)": round(np.mean(testY), 2),
+        "Variance (Actual)": round(np.var(testY), 2),
+        "RMSE": round(rmse, 3),
         "MSE": round(mean_squared_error(testY, predictions), 3),
         "MAE": round(mean_absolute_error(testY, predictions), 3),
-        "R²": round(r2_score(testY, predictions), 3)
+        "R²": round(r2_score(testY, predictions), 3),
+        "NRMSE (%)": round(nrmse, 1)
     }
     summary_table.append(stat_data)
 
