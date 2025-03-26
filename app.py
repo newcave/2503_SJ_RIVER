@@ -62,8 +62,8 @@ for target_col in target_columns:
 
     # 결과 DataFrame 구성
     result_df = testX.copy()
-    result_df['Actual'] = testY.values
-    result_df['Prediction'] = predictions
+    result_df['Monitored WL (EL.m)'] = testY.values
+    result_df['Predicted WL (EL.m)'] = predictions
 
     # 통계 및 메트릭 계산
     stat_data = {
@@ -103,8 +103,8 @@ for target_col in target_columns:
 
     # 결과 DataFrame 구성
     result_df = testX.copy()
-    result_df['Actual'] = testY.values
-    result_df['Prediction'] = predictions
+    result_df['Monitored WL (EL.m)'] = testY.values
+    result_df['Predicted WL (EL.m)'] = predictions
     st.write(result_df.head(5).round(3))
 
     # 지점별 요약 통계만 단독 표로도 출력
@@ -125,8 +125,8 @@ for target_col in target_columns:
     # 시계열 그래프
     st.subheader("Time Series Comparison")
     fig, ax = plt.subplots()
-    ax.plot(result_df['Actual'].reset_index(drop=True), label='Actual', color='blue')
-    ax.plot(result_df['Prediction'].reset_index(drop=True), label='Predicted', color='orange')
+    ax.plot(result_df['Monitored WL (EL.m)'].reset_index(drop=True), label='Monitored WL (EL.m)', color='blue')
+    ax.plot(result_df['Predicted WL (EL.m)'].reset_index(drop=True), label='Predicted WL (EL.m)', color='orange')
     ax.set_xlabel("Prediction time (Hrs.)")
     ax.set_ylabel("Water Level (EL.m)")
     ax.legend()
@@ -135,13 +135,13 @@ for target_col in target_columns:
     # 산점도
     st.subheader("Scatter Plot of Predicted vs. Actual")
     fig2, ax2 = plt.subplots()
-    ax2.scatter(result_df['Actual'], result_df['Prediction'], alpha=0.6, color='green')
-    ax2.set_xlabel("Actual Values")
-    ax2.set_ylabel("Predicted Values")
-    ax2.plot([result_df['Actual'].min(), result_df['Actual'].max()],
-             [result_df['Actual'].min(), result_df['Actual'].max()], 'r--', lw=2)
+    ax2.scatter(result_df['Monitored WL (EL.m)'], result_df['Predicted WL (EL.m)'], alpha=0.6, color='green')
+    ax2.set_xlabel("Monitored WL (EL.m)")
+    ax2.set_ylabel("Predicted WL (EL.m)")
+    ax2.plot([result_df['Monitored WL (EL.m)'].min(), result_df['Monitored WL (EL.m)'].max()],
+             [result_df['Monitored WL (EL.m)'].min(), result_df['Monitored WL (EL.m)'].max()], 'r--', lw=2)
     st.pyplot(fig2)
 
     # 전체 R² 출력
-    overall_r2 = r2_score(result_df['Actual'], result_df['Prediction'])
+    overall_r2 = r2_score(result_df['Monitored WL (EL.m)'], result_df['Predicted WL (EL.m)'])
     st.metric(label=f"Overall R² Score ({target_col})", value=f"{overall_r2:.4f}")
