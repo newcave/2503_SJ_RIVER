@@ -84,7 +84,7 @@ if summary_table:
     st.subheader("Summary Table for All Selected Locations")
     summary_df = pd.DataFrame(summary_table)
     summary_df = summary_df.set_index("location")
-    st.table(summary_df)
+    st.table(summary_df.round(3))
 
 # 개별 지점별 결과 출력
 for target_col in target_columns:
@@ -105,13 +105,13 @@ for target_col in target_columns:
     result_df = testX.copy()
     result_df['Actual'] = testY.values
     result_df['Prediction'] = predictions
-    st.write(result_df.head(5).style.format("{:.3f}"))
+    st.write(result_df.head(5).round(3))
 
     # 지점별 요약 통계만 단독 표로도 출력
     st.subheader("Basic Statistics and Metrics")
     single_stat = summary_df.loc[[target_col]].reset_index()
     single_stat.columns.name = "location"
-    st.table(single_stat.style.format("{:.3f}"))
+    st.table(single_stat.round(3))
 
     # 다운로드 버튼
     csv_result = result_df.to_csv(index=False).encode('utf-8-sig')
