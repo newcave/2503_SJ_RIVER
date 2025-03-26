@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 # Page Title
 st.title("Random Forest Prediction GUI with CSV Data")
@@ -64,6 +64,21 @@ for target_col in target_columns:
     result_df['Actual'] = testY.values
     result_df['Prediction'] = predictions
     st.write(result_df.head())
+
+    # 통계 및 메트릭 표 생성
+    st.subheader("Basic Statistics and Metrics")
+    stat_data = {
+        "Min (Actual)": [np.min(testY)],
+        "Max (Actual)": [np.max(testY)],
+        "Mean (Actual)": [np.mean(testY)],
+        "Variance (Actual)": [np.var(testY)],
+        "RMSE": [np.sqrt(mean_squared_error(testY, predictions))],
+        "MSE": [mean_squared_error(testY, predictions)],
+        "MAE": [mean_absolute_error(testY, predictions)],
+        "R²": [r2_score(testY, predictions)]
+    }
+    stat_df = pd.DataFrame(stat_data, index=[target_col])
+    st.table(stat_df)
 
     # 다운로드 버튼
     csv_result = result_df.to_csv(index=False).encode('utf-8-sig')
