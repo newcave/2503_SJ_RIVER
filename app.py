@@ -8,6 +8,10 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 # Page Title
 st.title("SeomJin River ML based-WL Prediction Surrogate Model")
 
+# Watershed Map View Checkbox
+if st.checkbox("Watershed Map View"):
+    st.image("SJ_RIVER.png", caption="SeomJin River Watershed", use_column_width=True)
+
 # File Uploader
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
@@ -39,7 +43,7 @@ if 'set_date' in data.columns:
 
 # 주요 지점 선택 체크박스 (모든 컬럼 중에서)
 st.subheader("Select Target Points for Prediction")
-target_columns = st.multiselect("Select one or more target columns", options=data.columns.tolist(), default=[data.columns[-1]])
+target_columns = st.multiselect("1개 이상의 예측 지점을 선택", options=data.columns.tolist(), default=[data.columns[-1]])
 
 if not target_columns:
     st.warning("Please select at least one target column.")
@@ -70,15 +74,14 @@ for target_col in target_columns:
     nrmse = rmse / (np.max(testY) - np.min(testY)) * 100
     stat_data = {
         "location": target_col,
-        "Min (Actual)": round(np.min(testY), 2),
-        "Max (Actual)": round(np.max(testY), 2),
-        "Mean (Actual)": round(np.mean(testY), 2),
-        "Variance (Actual)": round(np.var(testY), 2),
+        "Min (EL.m)": round(np.min(testY), 2),
+        "Max (El.m)": round(np.max(testY), 2),
+        "Mean (El.m)": round(np.mean(testY), 2),
         "RMSE": round(rmse, 3),
         "MSE": round(mean_squared_error(testY, predictions), 3),
         "MAE": round(mean_absolute_error(testY, predictions), 3),
         "R²": round(r2_score(testY, predictions), 3),
-        "NRMSE (%)": round(nrmse, 1)
+        "NRMSE(%)": round(nrmse, 1)
     }
     summary_table.append(stat_data)
 
@@ -108,13 +111,13 @@ for target_col in target_columns:
     result_df = testX.copy()
     result_df['Monitored WL (EL.m)'] = testY.values
     result_df['Predicted WL (EL.m)'] = predictions
-    st.write(result_df.head(5).round(3))
+    st.write(result_df.head(5).round(2))
 
     # 지점별 요약 통계만 단독 표로도 출력
     st.subheader("Basic Statistics and Metrics")
     single_stat = summary_df.loc[[target_col]].reset_index()
     single_stat.columns.name = "location"
-    st.table(single_stat.round(3))
+    st.table(single_stat.round(2))
 
     # 다운로드 버튼
     csv_result = result_df.to_csv(index=False).encode('utf-8-sig')
@@ -147,4 +150,4 @@ for target_col in target_columns:
 
     # 전체 R² 출력
     overall_r2 = r2_score(result_df['Monitored WL (EL.m)'], result_df['Predicted WL (EL.m)'])
-    st.metric(label=f"Overall R² Score ({target_col})", value=f"{overall_r2:.4f}")
+    st.metric(label=f"Overall R² Score ({target_col})", value=f"{overall_r2:.3f}")
