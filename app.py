@@ -14,13 +14,20 @@ uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 # Checkbox for default data
 use_default_data = st.checkbox("Use Default CSV Data")
 
+# Data Loading with encoding fallback
+def load_csv(filepath_or_buffer):
+    try:
+        return pd.read_csv(filepath_or_buffer, encoding='utf-8')
+    except UnicodeDecodeError:
+        return pd.read_csv(filepath_or_buffer, encoding='cp949')
+
 # Data Processing
 if use_default_data:
     data_path = "220906_SJ_LSTM_RIVER_TEST002_12cols_200805to15_10min_interval_st104200_31km.csv"
-    data = pd.read_csv(data_path)
+    data = load_csv(data_path)
     st.success("Default CSV data loaded.")
 elif uploaded_file:
-    data = pd.read_csv(uploaded_file)
+    data = load_csv(uploaded_file)
     st.success("Uploaded CSV data loaded.")
 else:
     st.warning("Please upload a CSV file or select the default data.")
