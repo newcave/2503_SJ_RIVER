@@ -68,10 +68,10 @@ for target_col in target_columns:
     # 통계 및 메트릭 계산
     stat_data = {
         "location": target_col,
-        "Min (Actual)": round(np.min(testY), 2),
-        "Max (Actual)": round(np.max(testY), 2),
-        "Mean (Actual)": round(np.mean(testY), 2),
-        "Variance (Actual)": round(np.var(testY), 2),
+        "Min (Actual)": round(np.min(testY), 3),
+        "Max (Actual)": round(np.max(testY), 3),
+        "Mean (Actual)": round(np.mean(testY), 3),
+        "Variance (Actual)": round(np.var(testY), 3),
         "RMSE": round(np.sqrt(mean_squared_error(testY, predictions)), 3),
         "MSE": round(mean_squared_error(testY, predictions), 3),
         "MAE": round(mean_absolute_error(testY, predictions), 3),
@@ -105,13 +105,13 @@ for target_col in target_columns:
     result_df = testX.copy()
     result_df['Actual'] = testY.values
     result_df['Prediction'] = predictions
-    st.write(result_df.head())
+    st.write(result_df.head(5).style.format("{:.3f}"))
 
     # 지점별 요약 통계만 단독 표로도 출력
     st.subheader("Basic Statistics and Metrics")
     single_stat = summary_df.loc[[target_col]].reset_index()
     single_stat.columns.name = "location"
-    st.table(single_stat)
+    st.table(single_stat.style.format("{:.3f}"))
 
     # 다운로드 버튼
     csv_result = result_df.to_csv(index=False).encode('utf-8-sig')
@@ -127,7 +127,7 @@ for target_col in target_columns:
     fig, ax = plt.subplots()
     ax.plot(result_df['Actual'].reset_index(drop=True), label='Actual', color='blue')
     ax.plot(result_df['Prediction'].reset_index(drop=True), label='Predicted', color='orange')
-    ax.set_xlabel("Hour")
+    ax.set_xlabel("Prediction time (Hrs.)")
     ax.set_ylabel("Water Level (EL.m)")
     ax.legend()
     st.pyplot(fig)
