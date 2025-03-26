@@ -17,9 +17,9 @@ use_default_data = st.checkbox("Use Default CSV Data")
 # Data Loading with encoding fallback
 def load_csv(filepath_or_buffer):
     try:
-        return pd.read_csv(filepath_or_buffer, encoding='utf-8')
-    except UnicodeDecodeError:
         return pd.read_csv(filepath_or_buffer, encoding='cp949')
+    except UnicodeDecodeError:
+        return pd.read_csv(filepath_or_buffer, encoding='utf-8')  # fallback
 
 # Data Processing
 if use_default_data:
@@ -64,7 +64,7 @@ result_df['Prediction'] = predictions
 st.write(result_df.head())
 
 # Download Results
-csv_result = result_df.to_csv(index=False).encode('utf-8')
+csv_result = result_df.to_csv(index=False).encode('utf-8-sig')
 st.download_button(
     label="Download Result CSV",
     data=csv_result,
@@ -92,14 +92,14 @@ ax2.plot([result_df['Actual'].min(), result_df['Actual'].max()],
          [result_df['Actual'].min(), result_df['Actual'].max()], 'r--', lw=2)
 st.pyplot(fig2)
 
-# R-squared for each point
-st.subheader("R² Score per Data Point")
+# R² Score per Data Point
+st.subheader("Squared Error per Data Point")
 r2_scores = [(actual - pred)**2 for actual, pred in zip(result_df['Actual'], result_df['Prediction'])]
-r2_df = pd.DataFrame({'R2': r2_scores})
+r2_df = pd.DataFrame({'Squared Error': r2_scores})
 fig3, ax3 = plt.subplots()
-ax3.plot(r2_df.index, r2_df['R2'], marker='o', linestyle='', color='purple')
+ax3.plot(r2_df.index, r2_df['Squared Error'], marker='o', linestyle='', color='purple')
 ax3.set_xlabel("Data Points")
-ax3.set_ylabel("Squared Errors (lower is better)")
+ax3.set_ylabel("Squared Error")
 st.pyplot(fig3)
 
 # Overall R² Score
