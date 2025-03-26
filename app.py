@@ -127,8 +127,8 @@ for target_col in target_columns:
     fig, ax = plt.subplots()
     ax.plot(result_df['Actual'].reset_index(drop=True), label='Actual', color='blue')
     ax.plot(result_df['Prediction'].reset_index(drop=True), label='Predicted', color='orange')
-    ax.set_xlabel("Time Steps")
-    ax.set_ylabel("Values")
+    ax.set_xlabel("Hour")
+    ax.set_ylabel("Water Level (EL.m)")
     ax.legend()
     st.pyplot(fig)
 
@@ -141,16 +141,6 @@ for target_col in target_columns:
     ax2.plot([result_df['Actual'].min(), result_df['Actual'].max()],
              [result_df['Actual'].min(), result_df['Actual'].max()], 'r--', lw=2)
     st.pyplot(fig2)
-
-    # 오차 그래프
-    st.subheader("Squared Error per Data Point")
-    r2_scores = [(actual - pred)**2 for actual, pred in zip(result_df['Actual'], result_df['Prediction'])]
-    r2_df = pd.DataFrame({'Squared Error': r2_scores})
-    fig3, ax3 = plt.subplots()
-    ax3.plot(r2_df.index, r2_df['Squared Error'], marker='o', linestyle='', color='purple')
-    ax3.set_xlabel("Data Points")
-    ax3.set_ylabel("Squared Error")
-    st.pyplot(fig3)
 
     # 전체 R² 출력
     overall_r2 = r2_score(result_df['Actual'], result_df['Prediction'])
