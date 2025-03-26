@@ -45,6 +45,48 @@ if not target_columns:
     st.warning("Please select at least one target column.")
     st.stop()
 
+# 지점별 요약 통계 테이블 누적 저장용
+summary_table = []
+
+for target_col in target_columns:
+    # 데이터 분할
+    feature_cols = [col for col in data.columns if col != target_col]
+    train_size = int(len(data) * 0.7)
+    trainX, trainY = data[feature_cols][:train_size], data[target_col][:train_size]
+    testX, testY = data[feature_cols][train_size:], data[target_col][train_size:]
+
+    # 모델 학습 및 예측
+    model = RandomForestRegressor(n_estimators=200, random_state=15)
+    model.fit(trainX, trainY)
+    predictions = model.predict(testX)
+
+    # 결과 DataFrame 구성
+    result_df = testX.copy()
+    result_df['Actual'] = testY.values
+    result_df['Prediction'] = predictions
+
+    # 통계 및 메트릭 계산
+    stat_data = {
+        "location": target_col,
+        "Min (Actual)": round(np.min(testY), 2),
+        "Max (Actual)": round(np.max(testY), 2),
+        "Mean (Actual)": round(np.mean(testY), 2),
+        "Variance (Actual)": round(np.var(testY), 2),
+        "RMSE": round(np.sqrt(mean_squared_error(testY, predictions)), 3),
+        "MSE": round(mean_squared_error(testY, predictions), 3),
+        "MAE": round(mean_absolute_error(testY, predictions), 3),
+        "R²": round(r2_score(testY, predictions), 3)
+    }
+    summary_table.append(stat_data)
+
+# 전체 요약 표 출력
+if summary_table:
+    st.subheader("Summary Table for All Selected Locations")
+    summary_df = pd.DataFrame(summary_table)
+    summary_df = summary_df.set_index("location")
+    st.table(summary_df)
+
+# 개별 지점별 결과 출력
 for target_col in target_columns:
     st.markdown(f"---\n### Results for Target: `{target_col}`")
 
@@ -54,7 +96,7 @@ for target_col in target_columns:
     trainX, trainY = data[feature_cols][:train_size], data[target_col][:train_size]
     testX, testY = data[feature_cols][train_size:], data[target_col][train_size:]
 
-    # 모델 학습
+    # 모델 재학습 및 예측
     model = RandomForestRegressor(n_estimators=200, random_state=15)
     model.fit(trainX, trainY)
     predictions = model.predict(testX)
@@ -65,20 +107,11 @@ for target_col in target_columns:
     result_df['Prediction'] = predictions
     st.write(result_df.head())
 
-    # 통계 및 메트릭 표 생성
+    # 지점별 요약 통계만 단독 표로도 출력
     st.subheader("Basic Statistics and Metrics")
-    stat_data = {
-        "Min (Actual)": [np.min(testY)],
-        "Max (Actual)": [np.max(testY)],
-        "Mean (Actual)": [np.mean(testY)],
-        "Variance (Actual)": [np.var(testY)],
-        "RMSE": [np.sqrt(mean_squared_error(testY, predictions))],
-        "MSE": [mean_squared_error(testY, predictions)],
-        "MAE": [mean_absolute_error(testY, predictions)],
-        "R²": [r2_score(testY, predictions)]
-    }
-    stat_df = pd.DataFrame(stat_data, index=[target_col])
-    st.table(stat_df)
+    single_stat = summary_df.loc[[target_col]].reset_index()
+    single_stat.columns.name = "location"
+    st.table(single_stat)
 
     # 다운로드 버튼
     csv_result = result_df.to_csv(index=False).encode('utf-8-sig')
