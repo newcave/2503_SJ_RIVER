@@ -37,71 +37,73 @@ else:
 if 'set_date' in data.columns:
     data = data.drop(['set_date'], axis='columns')
 
-# Data Preview
-st.subheader("Data Preview")
-st.write(data.head())
+# 주요 지점 선택 체크박스 (모든 컬럼 중에서)
+st.subheader("Select Target Points for Prediction")
+target_columns = st.multiselect("Select one or more target columns", options=data.columns.tolist(), default=[data.columns[-1]])
 
-# Dataset Split
-train_size = int(len(data) * 0.7)
-train_data = data[:train_size]
-test_data = data[train_size:]
+if not target_columns:
+    st.warning("Please select at least one target column.")
+    st.stop()
 
-trainX, trainY = train_data.iloc[:, :-1], train_data.iloc[:, -1]
-testX, testY = test_data.iloc[:, :-1], test_data.iloc[:, -1]
+for target_col in target_columns:
+    st.markdown(f"---\n### Results for Target: `{target_col}`")
 
-# Random Forest Model
-model = RandomForestRegressor(n_estimators=200, random_state=15)
-model.fit(trainX, trainY)
+    # 데이터 분할
+    feature_cols = [col for col in data.columns if col != target_col]
+    train_size = int(len(data) * 0.7)
+    trainX, trainY = data[feature_cols][:train_size], data[target_col][:train_size]
+    testX, testY = data[feature_cols][train_size:], data[target_col][train_size:]
 
-# Predictions
-predictions = model.predict(testX)
+    # 모델 학습
+    model = RandomForestRegressor(n_estimators=200, random_state=15)
+    model.fit(trainX, trainY)
+    predictions = model.predict(testX)
 
-# Prediction Results
-st.subheader("Prediction Results")
-result_df = testX.copy()
-result_df['Actual'] = testY.values
-result_df['Prediction'] = predictions
-st.write(result_df.head())
+    # 결과 DataFrame 구성
+    result_df = testX.copy()
+    result_df['Actual'] = testY.values
+    result_df['Prediction'] = predictions
+    st.write(result_df.head())
 
-# Download Results
-csv_result = result_df.to_csv(index=False).encode('utf-8-sig')
-st.download_button(
-    label="Download Result CSV",
-    data=csv_result,
-    file_name="predictions.csv",
-    mime="text/csv"
-)
+    # 다운로드 버튼
+    csv_result = result_df.to_csv(index=False).encode('utf-8-sig')
+    st.download_button(
+        label=f"Download Result CSV ({target_col})",
+        data=csv_result,
+        file_name=f"predictions_{target_col}.csv",
+        mime="text/csv"
+    )
 
-# Time Series Plot
-st.subheader("Time Series Comparison of Actual and Predicted Values")
-fig, ax = plt.subplots()
-ax.plot(result_df['Actual'].reset_index(drop=True), label='Actual', color='blue')
-ax.plot(result_df['Prediction'].reset_index(drop=True), label='Predicted', color='orange')
-ax.set_xlabel("Time Steps")
-ax.set_ylabel("Values")
-ax.legend()
-st.pyplot(fig)
+    # 시계열 그래프
+    st.subheader("Time Series Comparison")
+    fig, ax = plt.subplots()
+    ax.plot(result_df['Actual'].reset_index(drop=True), label='Actual', color='blue')
+    ax.plot(result_df['Prediction'].reset_index(drop=True), label='Predicted', color='orange')
+    ax.set_xlabel("Time Steps")
+    ax.set_ylabel("Values")
+    ax.legend()
+    st.pyplot(fig)
 
-# Scatter Plot for Actual vs Predicted
-st.subheader("Scatter Plot of Predicted vs. Actual Values")
-fig2, ax2 = plt.subplots()
-ax2.scatter(result_df['Actual'], result_df['Prediction'], alpha=0.6, color='green')
-ax2.set_xlabel("Actual Values")
-ax2.set_ylabel("Predicted Values")
-ax2.plot([result_df['Actual'].min(), result_df['Actual'].max()],
-         [result_df['Actual'].min(), result_df['Actual'].max()], 'r--', lw=2)
-st.pyplot(fig2)
+    # 산점도
+    st.subheader("Scatter Plot of Predicted vs. Actual")
+    fig2, ax2 = plt.subplots()
+    ax2.scatter(result_df['Actual'], result_df['Prediction'], alpha=0.6, color='green')
+    ax2.set_xlabel("Actual Values")
+    ax2.set_ylabel("Predicted Values")
+    ax2.plot([result_df['Actual'].min(), result_df['Actual'].max()],
+             [result_df['Actual'].min(), result_df['Actual'].max()], 'r--', lw=2)
+    st.pyplot(fig2)
 
-# R² Score per Data Point
-st.subheader("Squared Error per Data Point")
-r2_scores = [(actual - pred)**2 for actual, pred in zip(result_df['Actual'], result_df['Prediction'])]
-r2_df = pd.DataFrame({'Squared Error': r2_scores})
-fig3, ax3 = plt.subplots()
-ax3.plot(r2_df.index, r2_df['Squared Error'], marker='o', linestyle='', color='purple')
-ax3.set_xlabel("Data Points")
-ax3.set_ylabel("Squared Error")
-st.pyplot(fig3)
+    # 오차 그래프
+    st.subheader("Squared Error per Data Point")
+    r2_scores = [(actual - pred)**2 for actual, pred in zip(result_df['Actual'], result_df['Prediction'])]
+    r2_df = pd.DataFrame({'Squared Error': r2_scores})
+    fig3, ax3 = plt.subplots()
+    ax3.plot(r2_df.index, r2_df['Squared Error'], marker='o', linestyle='', color='purple')
+    ax3.set_xlabel("Data Points")
+    ax3.set_ylabel("Squared Error")
+    st.pyplot(fig3)
 
-# Overall R² Score
-overall_r2 = r2_score(result_df['Actual'], result_df['Prediction'])
-st.metric(label="Overall R² Score", value=f"{overall_r2:.4f}")
+    # 전체 R² 출력
+    overall_r2 = r2_score(result_df['Actual'], result_df['Prediction'])
+    st.metric(label=f"Overall R² Score ({target_col})", value=f"{overall_r2:.4f}")
